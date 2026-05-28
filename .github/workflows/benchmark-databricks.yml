@@ -1,0 +1,37 @@
+name: Benchmark — Databricks
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Suite config path'
+        default: 'configs/suites/tpcds-1tb.yml'
+      run_mode:
+        description: 'Run mode (sequential/concurrent)'
+        default: 'sequential'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
+      - name: Build
+        run: ./mvnw clean package -DskipTests
+      - name: Run benchmark
+        env:
+          DBR_HOST: ${{ secrets.DBR_HOST }}
+          DBR_TOKEN: ${{ secrets.DBR_TOKEN }}
+          DBR_HTTP_PATH: ${{ secrets.DBR_HTTP_PATH }}
+          DBR_SCHEMA: ${{ secrets.DBR_SCHEMA }}
+        run: |
+          java -jar target/sql-bench-*-jar-with-dependencies.jar configs/benchmark.yml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results-databricks
+          path: benchmark_results/

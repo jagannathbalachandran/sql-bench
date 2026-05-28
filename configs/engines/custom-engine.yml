@@ -1,0 +1,30 @@
+engine:
+  # Display name used in reports and CSV filenames
+  name: "MyEngine"
+
+  # type: custom | databricks | snowflake
+  type: custom
+
+  jdbc:
+    # Fully-qualified JDBC driver class from your engine's JAR
+    driver-class: "com.mycompany.jdbc.Driver"
+
+    # JDBC URL — use ${ENV_VAR} for secrets
+    url: "jdbc:myengine://${CUSTOM_HOST}:${CUSTOM_PORT}/${CUSTOM_DB}"
+
+    username: "${CUSTOM_USER}"
+    password: "${CUSTOM_PASSWORD}"
+
+    # Additional JDBC connection properties
+    properties:
+      schema: "${CUSTOM_SCHEMA}"
+
+  connection:
+    pool-size: 5
+    timeout-seconds: 420
+
+  metrics:
+    # If your engine returns planning time as a JDBC result column, set the column name.
+    # Leave null to skip (wall-clock total time is always collected).
+    explain-json-column: null
+    planning-time-ms-column: null

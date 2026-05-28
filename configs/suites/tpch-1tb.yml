@@ -1,0 +1,7 @@
+suite:
+  name: TPCH_1TB
+  query-dir: query_files/TPCH_1TB
+  validation: best-run
+  runs: 3
+  row-count-validation: true
+  load-profile: null

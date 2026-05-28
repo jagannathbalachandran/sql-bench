@@ -1,0 +1,10 @@
+target/
+benchmark_results/
+*.class
+*.jar
+.DS_Store
+.idea/
+*.iml
+.settings/
+.classpath
+.project

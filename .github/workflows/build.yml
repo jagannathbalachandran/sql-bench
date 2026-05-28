@@ -1,0 +1,27 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
+      - name: Build
+        run: ./mvnw clean package -DskipTests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sql-bench-jar
+          path: target/sql-bench-*-jar-with-dependencies.jar

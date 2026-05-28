@@ -1,0 +1,24 @@
+engine:
+  name: "Snowflake"
+  type: snowflake
+
+  jdbc:
+    driver-class: "net.snowflake.client.jdbc.SnowflakeDriver"
+    url: "jdbc:snowflake://${SF_ACCOUNT}.snowflakecomputing.com"
+    username: "${SF_USER}"
+    password: "${SF_PASSWORD}"
+    properties:
+      warehouse: "${SF_WAREHOUSE}"
+      db: "${SF_DATABASE}"
+      schema: "${SF_SCHEMA}"
+      role: "${SF_ROLE}"
+
+  connection:
+    pool-size: 5
+    timeout-seconds: 420
+
+  snowflake:
+    # Enrich results from INFORMATION_SCHEMA.QUERY_HISTORY after each run
+    fetch-query-history: true
+    # Optional: separate warehouse for reading query history (avoids credit usage on benchmark warehouse)
+    reporting-warehouse: "${SF_REPORTING_WAREHOUSE}"

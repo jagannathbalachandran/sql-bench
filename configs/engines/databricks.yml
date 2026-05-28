@@ -1,0 +1,30 @@
+engine:
+  name: "Databricks"
+  type: databricks
+
+  jdbc:
+    driver-class: "com.databricks.client.jdbc.Driver"
+    url: "jdbc:databricks://${DBR_HOST}:443/default"
+    username: "token"
+    password: "${DBR_TOKEN}"
+    properties:
+      transportMode: "http"
+      ssl: "1"
+      httpPath: "${DBR_HTTP_PATH}"
+      schema: "${DBR_SCHEMA}"
+
+  connection:
+    pool-size: 5
+    timeout-seconds: 420
+
+  databricks:
+    # Whether to enrich results with server-side planning/execution times
+    fetch-query-history: true
+
+    # api  = Databricks REST API /api/2.0/sql/history/queries
+    # sql  = query system.query.history table directly
+    history-fetch-mode: api
+
+    api-token: "${DBR_TOKEN}"
+    api-host: "${DBR_HOST}"
+    retry-count: 3
