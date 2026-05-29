@@ -2,6 +2,7 @@ package io.sqlbench.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.sqlbench.util.EnvInterpolator;
 
@@ -10,7 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ConfigLoader {
-    private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
+    private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory())
+            .setPropertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE);
     private static final ObjectMapper JSON = new ObjectMapper();
 
     public static BenchmarkConfig load(String configPath) throws IOException {

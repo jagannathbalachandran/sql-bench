@@ -12,6 +12,7 @@ engine:
       db: "${SF_DATABASE}"
       schema: "${SF_SCHEMA}"
       role: "${SF_ROLE}"
+      JDBC_QUERY_RESULT_FORMAT: JSON
 
   connection:
     pool-size: 5

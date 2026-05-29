@@ -1,25 +1,23 @@
 benchmark:
   # Paths to engine config files — add/remove engines as needed
   engines:
-    - configs/engines/custom-engine.yml
-    - configs/engines/databricks.yml
     - configs/engines/snowflake.yml
 
   # Execution mode: sequential | concurrent | load-profile
   run-mode: sequential
 
   # How many times to run each suite (best run is selected for reporting)
-  runs-per-suite: 3
+  runs-per-suite: 1
 
   # Per-query timeout in seconds
   query-timeout-seconds: 420
 
   # Threads used in concurrent / load-profile mode
-  concurrent-threads: 10
+  concurrent-threads: 1
 
   # Suite config paths to run
   suites:
-    - configs/suites/tpcds-1tb.yml
+    - configs/suites/tpcds-100gb.yml
 
   output:
     local-dir: ./benchmark_results

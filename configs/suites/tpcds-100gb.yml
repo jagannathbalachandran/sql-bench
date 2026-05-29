@@ -1,0 +1,11 @@
+suite:
+  name: TPCDS_100GB
+  # Directory containing per-engine CSV query files
+  query-dir: query_files/TPCDS_100GB
+  # best-run | second-run | none
+  validation: best-run
+  runs-per-suite: 1
+  # Row counts vary by scale factor; disable validation and compare latency only
+  row-count-validation: false
+  # Optional: path to a load profile CSV for load-profile run mode
+  load-profile: null

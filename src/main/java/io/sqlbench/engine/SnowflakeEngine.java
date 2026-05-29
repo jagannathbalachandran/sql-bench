@@ -33,10 +33,10 @@ public class SnowflakeEngine extends AbstractJdbcEngine {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                String queryId = rs.getString("query_id");
-                String queryText = rs.getString("query_text");
-                long compilationMs = rs.getLong("compilation_time");
-                long executionMs = rs.getLong("execution_time");
+                String queryId = rs.getString("QUERY_ID");
+                String queryText = rs.getString("QUERY_TEXT");
+                long compilationMs = rs.getLong("COMPILATION_TIME");
+                long executionMs = rs.getLong("EXECUTION_TIME");
 
                 for (QueryResult r : run.getResults()) {
                     if (queryText != null && queryText.contains(r.getQueryAlias())) {
