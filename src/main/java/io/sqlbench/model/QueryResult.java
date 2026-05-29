@@ -5,6 +5,7 @@ public class QueryResult {
 
     private final String engineName;
     private final String queryAlias;
+    private final String querySql;
     private String queryId = "";
     private final Status status;
     private long planningTimeMs = -1;
@@ -13,31 +14,33 @@ public class QueryResult {
     private long rowCount = -1;
     private final String errorMessage;
 
-    private QueryResult(String engineName, String queryAlias, Status status,
+    private QueryResult(String engineName, String queryAlias, String querySql, Status status,
                         long totalClientTimeMs, String errorMessage) {
         this.engineName = engineName;
         this.queryAlias = queryAlias;
+        this.querySql = querySql;
         this.status = status;
         this.totalClientTimeMs = totalClientTimeMs;
         this.errorMessage = errorMessage;
     }
 
-    public static QueryResult success(String engine, String alias, long clientMs, long rows) {
-        QueryResult r = new QueryResult(engine, alias, Status.SUCCESS, clientMs, null);
+    public static QueryResult success(String engine, String alias, String sql, long clientMs, long rows) {
+        QueryResult r = new QueryResult(engine, alias, sql, Status.SUCCESS, clientMs, null);
         r.rowCount = rows;
         return r;
     }
 
-    public static QueryResult failed(String engine, String alias, long clientMs, String error) {
-        return new QueryResult(engine, alias, Status.FAILED, clientMs, error);
+    public static QueryResult failed(String engine, String alias, String sql, long clientMs, String error) {
+        return new QueryResult(engine, alias, sql, Status.FAILED, clientMs, error);
     }
 
-    public static QueryResult timedOut(String engine, String alias, long clientMs) {
-        return new QueryResult(engine, alias, Status.TIMED_OUT, clientMs, "Query timed out");
+    public static QueryResult timedOut(String engine, String alias, String sql, long clientMs) {
+        return new QueryResult(engine, alias, sql, Status.TIMED_OUT, clientMs, "Query timed out");
     }
 
     public String getEngineName() { return engineName; }
     public String getQueryAlias() { return queryAlias; }
+    public String getQuerySql() { return querySql; }
     public String getQueryId() { return queryId; }
     public void setQueryId(String queryId) { this.queryId = queryId; }
     public Status getStatus() { return status; }

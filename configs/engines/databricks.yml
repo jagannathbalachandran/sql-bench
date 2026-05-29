@@ -28,3 +28,5 @@ engine:
     api-token: "${DBR_TOKEN}"
     api-host: "${DBR_HOST}"
     retry-count: 3
+    # Seconds to wait after run finishes before querying history (API has latency)
+    query-history-delay-seconds: 15

@@ -10,11 +10,14 @@ public class SnowflakeEngineConfig extends EngineConfig {
     public static class SnowflakeConfig {
         private boolean fetchQueryHistory = true;
         private String reportingWarehouse;
+        private int queryHistoryDelaySeconds = 15;
 
         public boolean isFetchQueryHistory() { return fetchQueryHistory; }
         public void setFetchQueryHistory(boolean v) { this.fetchQueryHistory = v; }
         public String getReportingWarehouse() { return reportingWarehouse; }
         public void setReportingWarehouse(String v) { this.reportingWarehouse = v; }
+        public int getQueryHistoryDelaySeconds() { return queryHistoryDelaySeconds; }
+        public void setQueryHistoryDelaySeconds(int v) { this.queryHistoryDelaySeconds = v; }
     }
 
     public SnowflakeConfig getSnowflake() { return snowflake; }

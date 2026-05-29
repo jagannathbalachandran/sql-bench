@@ -23,3 +23,5 @@ engine:
     fetch-query-history: true
     # Optional: separate warehouse for reading query history (avoids credit usage on benchmark warehouse)
     reporting-warehouse: "${SF_REPORTING_WAREHOUSE}"
+    # Seconds to wait after run finishes before querying history (INFORMATION_SCHEMA has latency)
+    query-history-delay-seconds: 15

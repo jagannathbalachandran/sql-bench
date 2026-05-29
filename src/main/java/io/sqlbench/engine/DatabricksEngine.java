@@ -29,10 +29,22 @@ public class DatabricksEngine extends AbstractJdbcEngine {
         if (!(config instanceof DatabricksEngineConfig cfg)) return;
         if (!cfg.getDatabricks().isFetchQueryHistory()) return;
 
+        int delaySecs = cfg.getDatabricks().getQueryHistoryDelaySeconds();
+        if (delaySecs > 0) {
+            LOG.info("Waiting {}s for Databricks query history to be available...", delaySecs);
+            try { Thread.sleep(delaySecs * 1000L); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        }
+
         if ("sql".equalsIgnoreCase(cfg.getDatabricks().getHistoryFetchMode())) {
             enrichViaSql(run);
         } else {
             enrichViaApi(run, cfg);
+        }
+
+        for (QueryResult r : run.getResults()) {
+            if (r.isSuccess() && r.getPlanningTimeMs() == -1) {
+                LOG.warn("No Databricks query history match for '{}' — compilation/execution times unavailable", r.getQueryAlias());
+            }
         }
     }
 
@@ -40,8 +52,7 @@ public class DatabricksEngine extends AbstractJdbcEngine {
         long startMs = run.getStartTimeMs() - 5000;
         long endMs = run.getEndTimeMs() + 5000;
         String sql = String.format(
-            "SELECT statement_id, statement_text, execution_status, " +
-            "total_duration_ms, compilation_time_ms, execution_time_ms " +
+            "SELECT statement_id, statement_text, compilation_time_ms, execution_time_ms " +
             "FROM system.query.history " +
             "WHERE start_time BETWEEN TIMESTAMP_MILLIS(%d) AND TIMESTAMP_MILLIS(%d) " +
             "AND executed_by = CURRENT_USER()", startMs, endMs);
@@ -50,19 +61,28 @@ public class DatabricksEngine extends AbstractJdbcEngine {
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
-            Map<String, long[]> historyMap = new HashMap<>();
+            record HistoryEntry(String id, String normalizedText, long planMs, long execMs) {}
+            java.util.List<HistoryEntry> entries = new java.util.ArrayList<>();
             while (rs.next()) {
-                String text = rs.getString("statement_text");
-                long planMs = rs.getLong("compilation_time_ms");
-                long execMs = rs.getLong("execution_time_ms");
-                historyMap.put(normalizeQuery(text), new long[]{planMs, execMs});
+                entries.add(new HistoryEntry(
+                    rs.getString("statement_id"),
+                    normalizeQuery(rs.getString("statement_text")),
+                    rs.getLong("compilation_time_ms"),
+                    rs.getLong("execution_time_ms")
+                ));
             }
 
             for (QueryResult r : run.getResults()) {
-                long[] times = historyMap.get(normalizeQuery(r.getQueryAlias()));
-                if (times != null) {
-                    r.setPlanningTimeMs(times[0]);
-                    r.setExecutionTimeMs(times[1]);
+                if (r.getQuerySql() == null) continue;
+                String prefix = normalizeQuery(r.getQuerySql());
+                prefix = prefix.substring(0, Math.min(200, prefix.length()));
+                for (HistoryEntry e : entries) {
+                    if (e.normalizedText().startsWith(prefix)) {
+                        r.setQueryId(e.id());
+                        r.setPlanningTimeMs(e.planMs());
+                        r.setExecutionTimeMs(e.execMs());
+                        break;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -100,16 +120,20 @@ public class DatabricksEngine extends AbstractJdbcEngine {
             run.getResults().forEach(r -> resultsByAlias.put(r.getQueryAlias(), r));
 
             for (JsonNode q : queryList) {
-                String queryText = q.path("query_text").asText();
+                String normalizedHistory = normalizeQuery(q.path("query_text").asText());
                 long planMs = q.path("compilation_time_ms").asLong(-1);
                 long execMs = q.path("execution_time_ms").asLong(-1);
                 String queryId = q.path("query_id").asText();
 
                 for (QueryResult r : run.getResults()) {
-                    if (queryText.contains(r.getQueryAlias()) || r.getQueryAlias().contains(normalizeQuery(queryText))) {
+                    if (r.getQuerySql() == null) continue;
+                    String normalizedQuery = normalizeQuery(r.getQuerySql());
+                    int prefixLen = Math.min(200, normalizedQuery.length());
+                    if (normalizedHistory.startsWith(normalizedQuery.substring(0, prefixLen))) {
+                        r.setQueryId(queryId);
                         r.setPlanningTimeMs(planMs);
                         r.setExecutionTimeMs(execMs);
-                        r.setQueryId(queryId);
+                        break;
                     }
                 }
             }

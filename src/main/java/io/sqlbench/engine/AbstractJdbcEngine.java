@@ -83,15 +83,15 @@ public abstract class AbstractJdbcEngine implements QueryEngine {
                 }
 
                 long totalMs = System.currentTimeMillis() - startMs;
-                QueryResult result = QueryResult.success(getEngineName(), query.getAlias(), totalMs, rowCount);
+                QueryResult result = QueryResult.success(getEngineName(), query.getAlias(), query.getSql(), totalMs, rowCount);
                 enrichFromStatement(result, stmt, query);
                 return result;
             }
         } catch (SQLTimeoutException e) {
-            return QueryResult.timedOut(getEngineName(), query.getAlias(), System.currentTimeMillis() - startMs);
+            return QueryResult.timedOut(getEngineName(), query.getAlias(), query.getSql(), System.currentTimeMillis() - startMs);
         } catch (Exception e) {
             log.warn("Query {} failed: {}", query.getAlias(), e.getMessage());
-            return QueryResult.failed(getEngineName(), query.getAlias(), System.currentTimeMillis() - startMs, e.getMessage());
+            return QueryResult.failed(getEngineName(), query.getAlias(), query.getSql(), System.currentTimeMillis() - startMs, e.getMessage());
         }
     }
 

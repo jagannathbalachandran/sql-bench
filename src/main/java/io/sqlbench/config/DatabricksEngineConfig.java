@@ -13,6 +13,7 @@ public class DatabricksEngineConfig extends EngineConfig {
         private String apiToken;
         private String apiHost;
         private int retryCount = 3;
+        private int queryHistoryDelaySeconds = 15;
 
         public boolean isFetchQueryHistory() { return fetchQueryHistory; }
         public void setFetchQueryHistory(boolean v) { this.fetchQueryHistory = v; }
@@ -24,6 +25,8 @@ public class DatabricksEngineConfig extends EngineConfig {
         public void setApiHost(String v) { this.apiHost = v; }
         public int getRetryCount() { return retryCount; }
         public void setRetryCount(int v) { this.retryCount = v; }
+        public int getQueryHistoryDelaySeconds() { return queryHistoryDelaySeconds; }
+        public void setQueryHistoryDelaySeconds(int v) { this.queryHistoryDelaySeconds = v; }
     }
 
     public DatabricksConfig getDatabricks() { return databricks; }

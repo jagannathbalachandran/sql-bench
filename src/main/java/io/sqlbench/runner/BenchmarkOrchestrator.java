@@ -6,7 +6,6 @@ import io.sqlbench.config.OutputConfig;
 import io.sqlbench.engine.EngineFactory;
 import io.sqlbench.engine.QueryEngine;
 import io.sqlbench.model.BenchmarkSuiteResult;
-import io.sqlbench.reporting.CsvResultsWriter;
 import io.sqlbench.reporting.ComparisonReporter;
 import io.sqlbench.reporting.MarkdownReporter;
 import io.sqlbench.reporting.SlackReporter;
@@ -15,6 +14,8 @@ import io.sqlbench.suite.SuiteDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,10 +26,15 @@ public class BenchmarkOrchestrator {
 
     public BenchmarkOrchestrator(BenchmarkConfig config) { this.config = config; }
 
+    private static final DateTimeFormatter RUN_TS_FMT = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+
     public void run() throws Exception {
         OutputConfig out = config.getOutput();
+        String runTimestamp = LocalDateTime.now().format(RUN_TS_FMT);
         List<QueryEngine> engines = new ArrayList<>();
         List<BenchmarkSuiteResult> allResults = new ArrayList<>();
+
+        LOG.info("Benchmark run timestamp: {}", runTimestamp);
 
         // Stage 1: connect to engines
         LOG.info("=== Connecting to engines ===");
@@ -49,7 +55,9 @@ public class BenchmarkOrchestrator {
                         engine, suite,
                         config.getRunMode(),
                         config.getQueryTimeoutSeconds(),
-                        config.getConcurrentThreads());
+                        config.getConcurrentThreads(),
+                        out.getLocalDir(),
+                        runTimestamp);
 
                 BenchmarkSuiteResult result = runner.runSuite();
                 allResults.add(result);
@@ -66,11 +74,7 @@ public class BenchmarkOrchestrator {
             LOG.info("  {} / {} → best run: #{}", r.getEngineName(), r.getSuiteName(), best + 1);
         }
 
-        // Stage 4: write CSV results
-        LOG.info("=== Writing CSV results ===");
-        new CsvResultsWriter(out.getLocalDir()).write(allResults);
-
-        // Stage 5: regression analysis (per engine vs local baseline)
+        // Stage 4: regression analysis (per engine vs local baseline)
         LOG.info("=== Running degradation analysis ===");
         BaselineManager baselineMgr = out.isUploadToS3()
                 ? new S3BaselineManager(out.getS3Bucket(), out.getS3Prefix())
@@ -86,7 +90,7 @@ public class BenchmarkOrchestrator {
                     r.getBestRun().getResults());
         }
 
-        // Stage 6: generate Markdown report + comparisons
+        // Stage 5: generate Markdown report + comparisons
         LOG.info("=== Generating report ===");
         String firstEngineName = engines.isEmpty() ? "" : engines.get(0).getEngineName();
         List<ComparisonReporter.EngineComparison> comparisons =
@@ -94,7 +98,7 @@ public class BenchmarkOrchestrator {
 
         new MarkdownReporter(out.getLocalDir()).generate(allResults, allRegressions, comparisons);
 
-        // Stage 7: optional Slack notification
+        // Stage 6: optional Slack notification
         if (out.isSlackEnabled() && out.getSlackWebhook() != null) {
             LOG.info("=== Sending Slack notification ===");
             new SlackReporter(out.getSlackWebhook()).post(allResults, comparisons);
